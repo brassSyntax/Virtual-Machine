@@ -15,7 +15,7 @@ int main()
 
 	int pLength = 0;
 
-	signed char pMemory[256], cReg[16];
+	char pMemory[256], cReg[16];
 
 	if (readBin.fail())
 	{
@@ -45,10 +45,19 @@ int main()
 		cout << int(pMemory[i]) << " " << (pMemory[i] & 0xF0) << " " << (pMemory[i] & 0x0F) << endl;
 	}*/
 
+	while (widx < pLength)
+	{
+		if (runCommand(widx, pMemory[widx], pMemory[widx + 1], cReg))
+		{
+			widx += 2;
+		}
+		else break;
+	}
+
 	return 0;
 }
 
-bool runCommand(unsigned int& wdix, char code, char operands, char* registers)
+bool runCommand(unsigned int& widx, char code, char operands, char* registers)
 {
 	char* reg1, *reg2, *reg0;
 
@@ -91,7 +100,7 @@ bool runCommand(unsigned int& wdix, char code, char operands, char* registers)
 			break;
 
 		case 0x07: // JMP addr
-			wdix += operands;
+			widx += operands;
 			break;
 
 		case 0x08: // JZ addr
@@ -101,7 +110,7 @@ bool runCommand(unsigned int& wdix, char code, char operands, char* registers)
 
 			break;
 		case 0x0A: // JFE
-			if (!pFile.eof()) wdix += operands;
+			if (!pFile.eof()) widx += operands;
 			break;
 
 		case 0x0B: // RET
