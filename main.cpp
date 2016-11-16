@@ -61,17 +61,17 @@ bool runCommand(unsigned int& widx, char code, char operands, char* registers)
 {
 	char* reg1, *reg2, *reg0;
 
-	reg1 = &registers[operands << 4];
-	reg2 = &registers[operands >> 4];
+	reg1 = &registers[operands >> 4];
+	reg2 = &registers[operands & 0x0F];
 	reg0 = &registers[0];
 
 	//ifstream pFile("q1_encr.txt", ios::binary);
 
-	if (pFile.fail())
+	/*if (pFile.fail())
 	{
 		cout << "Encrypted file not found. Halting...";
 		return false;
-	}
+	}*/
 
 	switch (code)
 	{
@@ -84,7 +84,7 @@ bool runCommand(unsigned int& widx, char code, char operands, char* registers)
 			break;
 
 		case 0x03: // MOV Rx, Ry
-			*reg2 = *reg1;
+			*reg1 = *reg2;
 			break;
 
 		case 0x04: // MOVC const
@@ -110,7 +110,12 @@ bool runCommand(unsigned int& widx, char code, char operands, char* registers)
 
 			break;
 		case 0x0A: // JFE
-			if (!pFile.eof()) widx += operands;
+			if (pFile.eof())
+			{
+				//cout << widx << " " << int(operands) << " ";
+				widx += operands;
+				//cout << widx << endl;
+			}
 			break;
 
 		case 0x0B: // RET
@@ -133,10 +138,16 @@ bool runCommand(unsigned int& widx, char code, char operands, char* registers)
 			break;
 
 		case 0x10: // IN Rx
+			if(pFile.good() && !pFile.eof())
 			pFile >> noskipws >> *reg1;
 			break;
+
 		case 0x11: // OUT Rx
 			cout << *reg1;
+			break;
+
+		default:
+			cout << hex << int(code) << " " << "Unrecognized command code." << endl;
 			break;
 	}
 
