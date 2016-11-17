@@ -13,7 +13,7 @@ int main()
 
 	unsigned int widx = 0; // working index
 
-	int pLength = 0;
+	int pLength = 0; // program length
 
 	char pMemory[256], cReg[16];
 
@@ -25,26 +25,17 @@ int main()
 	}
 	else
 	{
+		// Read to memory
 		while (!readBin.eof())
 		{
 			readBin >> noskipws >> pMemory[pLength];
 			if (readBin.good()) pLength++;
 		}
+
+		readBin.close();
 	}
 
-	
-	/*for(int i = 0; i < pLength; i++)
-	{
-		cout << "Byte " << dec << i << ": ";
-		cout << hex << static_cast<int> ((pMemory[i]) ) << endl;
-	}*/
-	
-
-	/*for (int i = 0; i < pLength; i += 2)
-	{
-		cout << int(pMemory[i]) << " " << (pMemory[i] & 0xF0) << " " << (pMemory[i] & 0x0F) << endl;
-	}*/
-
+	// Execute program
 	while (widx < pLength)
 	{
 		if (runCommand(widx, pMemory[widx], pMemory[widx + 1], cReg))
@@ -61,32 +52,22 @@ bool runCommand(unsigned int& widx, char code, char operands, char* registers)
 {
 	char* reg1, *reg2, *reg0;
 
-	reg1 = &registers[operands & 0xF0];
-	reg2 = &registers[operands & 0x0F];
+	reg1 = &registers[operands & 0x0F];
+	reg2 = &registers[operands >> 4];
 	reg0 = &registers[0];
-
-	//ifstream pFile("q1_encr.txt", ios::binary);
-
-	if (pFile.eof())
-	{
-		cout << "Encrypted file not found. Halting...";
-		return false;
-	}
-
-	cout << int(code) << endl;
 
 	switch (code)
 	{
 		case 0x01: // INC Rx
-			*reg1++;
+			*reg1 += 1;
 			break;
 
 		case 0x02: // DEC Rx
-			*reg1--;
+			*reg1 -= 1;
 			break;
 
 		case 0x03: // MOV Rx, Ry
-			*reg2 = *reg1;
+			*reg1 = *reg2;
 			break;
 
 		case 0x04: // MOVC const
@@ -102,7 +83,7 @@ bool runCommand(unsigned int& widx, char code, char operands, char* registers)
 			break;
 
 		case 0x07: // JMP addr
-			widx += operands;
+			widx += operands - 2; // -2 to ignore the passive jump
 			break;
 
 		case 0x08: // JZ addr
@@ -112,7 +93,8 @@ bool runCommand(unsigned int& widx, char code, char operands, char* registers)
 
 			break;
 		case 0x0A: // JFE
-			if (!pFile.eof()) widx += operands;
+			if (pFile.eof())
+				widx += operands - 2; // -2 to ignore the passive jump
 			break;
 
 		case 0x0B: // RET
@@ -123,7 +105,7 @@ bool runCommand(unsigned int& widx, char code, char operands, char* registers)
 			break;
 
 		case 0x0D: // SUB Rx, Ry
-			*reg1 = *reg2 - *reg1;
+			*reg1 -= *reg2;
 			break;
 
 		case 0x0E: // XOR Rx, Ry
@@ -144,7 +126,8 @@ bool runCommand(unsigned int& widx, char code, char operands, char* registers)
 			break;
 
 		default:
-			cout << "Unrecognized command code." << endl;
+			cout << hex << int(code) << " " << "Unrecognized command code." << endl;
+			break;
 	}
 
 	return true;
